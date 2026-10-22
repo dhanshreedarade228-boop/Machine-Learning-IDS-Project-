@@ -1,0 +1,88 @@
+# Machine Learning Based Intrusion Detection System (IDS)
+
+# Install required libraries:
+# pip install pandas scikit-learn
+
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report
+
+# Step 1: Create sample network traffic dataset
+data = {
+    "packet_size": [
+        100, 120, 150, 200, 180,
+        900, 850, 950, 1000, 870,
+        110, 140, 190, 920, 980
+    ],
+    "connection_duration": [
+        10, 12, 15, 20, 18,
+        1, 2, 1, 2, 3,
+        11, 14, 19, 1, 2
+    ],
+    "failed_logins": [
+        0, 0, 0, 0, 1,
+        8, 7, 9, 10, 6,
+        0, 1, 0, 8, 9
+    ],
+    "label": [
+        "Normal", "Normal", "Normal", "Normal", "Normal",
+        "Attack", "Attack", "Attack", "Attack", "Attack",
+        "Normal", "Normal", "Normal", "Attack", "Attack"
+    ]
+}
+
+df = pd.DataFrame(data)
+
+# Step 2: Separate features and target
+X = df[[
+    "packet_size",
+    "connection_duration",
+    "failed_logins"
+]]
+y = df["label"]
+
+# Step 3: Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.30, random_state=42,
+    stratify=y
+)
+
+# Step 4: Train the machine learning model
+model = RandomForestClassifier(
+    n_estimators=100,
+    random_state=42
+)
+
+model.fit(X_train, y_train)
+
+# Step 5: Test the model
+y_pred = model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print("===== MACHINE LEARNING IDS =====")
+print("Model: Random Forest")
+print(f"Model Accuracy: {accuracy * 100:.2f}%")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, zero_division=0))
+
+# Step 6: Detect suspicious network traffic
+new_traffic = pd.DataFrame({
+    "packet_size": [950, 130],
+    "connection_duration": [1, 15],
+    "failed_logins": [9, 0]
+})
+
+predictions = model.predict(new_traffic)
+
+print("\n===== INTRUSION DETECTION RESULTS =====")
+
+for i, prediction in enumerate(predictions):
+    print(f"\nTraffic Record {i + 1}:")
+    if prediction == "Attack":
+        print("ALERT: Suspicious traffic detected!")
+    else:
+        print("Status: Normal traffic")
+
+print("\nIDS execution completed.")
